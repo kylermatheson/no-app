@@ -3,13 +3,24 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo/metro-runtime": "~56.0.13",
+    "@react-native-async-storage/async-storage": "^3.1.1",
     "expo": "~56.0.8",
+    "expo-background-fetch": "^56.0.16",
+    "expo-haptics": "^56.0.3",
+    "expo-notifications": "^56.0.15",
     "expo-status-bar": "~56.0.4",
+    "expo-task-manager": "^56.0.16",
     "react": "19.2.3",
-    "react-native": "0.85.3"
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "^3.0.0",
+    "react-native-reanimated": "^4.4.0",
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "babel-preset-expo": "^56.0.14",
     "typescript": "~6.0.3"
   },
   "scripts": {
