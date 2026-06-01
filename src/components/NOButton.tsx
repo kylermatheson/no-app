@@ -70,7 +70,7 @@ export default function NOButton({ onConfirmed }: Props) {
         style={[styles.button, { transform: [{ scale }] }]}
         {...panResponder.panHandlers}
       >
-        <Text style={styles.label}>NO</Text>
+        <Text style={styles.label} selectable={false}>NO</Text>
       </RNAnimated.View>
     </View>
   );
@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 4,
+    userSelect: 'none',
   },
   outerRing: {
     position: 'absolute',
