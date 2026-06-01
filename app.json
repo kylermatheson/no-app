@@ -21,7 +21,16 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "name": "No",
+      "shortName": "No",
+      "description": "Every time you say no, it counts.",
+      "themeColor": "#0D0D1A",
+      "backgroundColor": "#0D0D1A",
+      "display": "standalone",
+      "orientation": "portrait",
+      "scope": "/no-app/",
+      "startUrl": "/no-app/"
     },
     "experiments": {
       "baseUrl": "/no-app"
