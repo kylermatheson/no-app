@@ -1,21 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, StyleSheet } from 'react-native';
+import { Modal, View, StyleSheet, Platform, ActivityIndicator } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { Session } from '@supabase/supabase-js';
 import MainScreen from './src/screens/MainScreen';
 import SlipConfirmationScreen from './src/screens/SlipConfirmationScreen';
+import AuthScreen from './src/screens/AuthScreen';
 import { loadState, getTodayRecord } from './src/store/storage';
+import { supabase } from './src/lib/supabase';
+import { pullAndMergeFromCloud } from './src/store/cloudStorage';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 async function scheduleMidnightSummary(todayNOs: number) {
+  if (Platform.OS === 'web') return;
   await Notifications.cancelAllScheduledNotificationsAsync();
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -32,14 +39,51 @@ async function scheduleMidnightSummary(todayNOs: number) {
   });
 }
 
+type AppView = 'loading' | 'auth' | 'main';
+
 export default function App() {
+  const [view, setView] = useState<AppView>('loading');
+  const [session, setSession] = useState<Session | null>(null);
   const [slipModal, setSlipModal] = useState(false);
   const [nosBefore, setNosBefore] = useState(0);
   const [mainRefreshKey, setMainRefreshKey] = useState(0);
 
   useEffect(() => {
-    Notifications.requestPermissionsAsync();
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        // Sync cloud data then show main
+        pullAndMergeFromCloud(session.user.id)
+          .catch(() => {}) // offline — continue with local data
+          .finally(() => setView('main'));
+      } else {
+        setView('auth');
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    if (Platform.OS !== 'web') {
+      Notifications.requestPermissionsAsync();
+    }
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  async function handleAuthSuccess() {
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    if (session) {
+      setView('loading');
+      await pullAndMergeFromCloud(session.user.id).catch(() => {});
+      setMainRefreshKey((k) => k + 1);
+    }
+    setView('main');
+  }
 
   function handleSlipPress(todayNOs: number) {
     setNosBefore(todayNOs);
@@ -55,18 +99,36 @@ export default function App() {
     loadState().then((s) => scheduleMidnightSummary(getTodayRecord(s).noCount));
   }
 
+  if (view === 'loading') {
+    return (
+      <View style={[styles.root, styles.centered]}>
+        <ActivityIndicator color="#FFFFFF" size="large" />
+      </View>
+    );
+  }
+
+  if (view === 'auth') {
+    return <AuthScreen onAuthSuccess={handleAuthSuccess} onSkip={() => setView('main')} />;
+  }
+
   return (
     <View style={styles.root}>
       <MainScreen
         onSlipPress={handleSlipPress}
         refreshKey={mainRefreshKey}
         onNOLogged={handleNOLogged}
+        session={session}
+        onSignOut={async () => {
+          await supabase.auth.signOut();
+          setView('auth');
+        }}
       />
       <Modal visible={slipModal} animationType="slide" presentationStyle="pageSheet">
         <SlipConfirmationScreen
           nosBefore={nosBefore}
           onConfirm={handleSlipConfirm}
           onCancel={() => setSlipModal(false)}
+          session={session}
         />
       </Modal>
     </View>

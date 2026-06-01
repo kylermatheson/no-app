@@ -10,7 +10,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Session } from '@supabase/supabase-js';
 import { logSlip } from '../store/storage';
+import { cloudLogSlip } from '../store/cloudStorage';
 
 const PRESET_TRIGGERS = ['Stress', 'Boredom', 'Loneliness', 'Late night', 'Other'];
 
@@ -18,15 +20,19 @@ type Props = {
   nosBefore: number;
   onConfirm: () => void;
   onCancel: () => void;
+  session?: Session | null;
 };
 
-export default function SlipConfirmationScreen({ nosBefore, onConfirm, onCancel }: Props) {
+export default function SlipConfirmationScreen({ nosBefore, onConfirm, onCancel, session }: Props) {
   const [selectedTrigger, setSelectedTrigger] = useState<string | null>(null);
   const [customTrigger, setCustomTrigger] = useState('');
 
   async function handleConfirm() {
     const trigger = selectedTrigger === 'Other' ? customTrigger || 'Other' : selectedTrigger ?? undefined;
     await logSlip(trigger || undefined);
+    if (session?.user?.id) {
+      cloudLogSlip(session.user.id, nosBefore, trigger || undefined).catch(() => {});
+    }
     onConfirm();
   }
 

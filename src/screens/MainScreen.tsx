@@ -9,16 +9,20 @@ import {
   StatusBar,
 } from 'react-native';
 import { AppState as RNAppState } from 'react-native';
+import { Session } from '@supabase/supabase-js';
 import { AppState, getTodayRecord, loadState, logNo } from '../store/storage';
+import { cloudLogNo } from '../store/cloudStorage';
 import NOButton from '../components/NOButton';
 
 type Props = {
   onSlipPress: (todayNOs: number) => void;
   refreshKey: number;
   onNOLogged?: () => void;
+  session?: Session | null;
+  onSignOut?: () => void;
 };
 
-export default function MainScreen({ onSlipPress, refreshKey, onNOLogged }: Props) {
+export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, session, onSignOut }: Props) {
   const [appState, setAppState] = useState<AppState>({ lifetimeNoCount: 0, dailyRecords: [] });
   const todayCount = getTodayRecord(appState).noCount;
   const counterAnim = useRef(new Animated.Value(1)).current;
@@ -41,6 +45,10 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged }: Prop
     const s = await logNo();
     setAppState(s);
     onNOLogged?.();
+    // Fire-and-forget cloud sync
+    if (session?.user?.id) {
+      cloudLogNo(session.user.id).catch(() => {});
+    }
     Animated.sequence([
       Animated.timing(counterAnim, { toValue: 1.35, duration: 120, useNativeDriver: true }),
       Animated.timing(counterAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
@@ -51,9 +59,17 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged }: Prop
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" />
       <View style={styles.container}>
-        <View style={styles.lifetimeRow}>
-          <Text style={styles.lifetimeLabel}>LIFETIME</Text>
-          <Text style={styles.lifetimeCount}>{appState.lifetimeNoCount}</Text>
+        {/* Top row: lifetime count + account indicator */}
+        <View style={styles.topRow}>
+          <View style={styles.lifetimeBlock}>
+            <Text style={styles.lifetimeLabel}>LIFETIME</Text>
+            <Text style={styles.lifetimeCount}>{appState.lifetimeNoCount}</Text>
+          </View>
+          {onSignOut && (
+            <TouchableOpacity onPress={onSignOut} style={styles.accountBtn}>
+              <Text style={styles.accountText}>{session ? '⚙︎' : 'Sign in'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.centerBlock}>
@@ -80,9 +96,12 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged }: Prop
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0D0D1A' },
   container: { flex: 1, alignItems: 'center', justifyContent: 'space-between', paddingVertical: 32 },
-  lifetimeRow: { alignItems: 'center', gap: 2 },
+  topRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', width: '100%', paddingHorizontal: 24 },
+  lifetimeBlock: { alignItems: 'center', gap: 2, flex: 1 },
   lifetimeLabel: { fontSize: 11, letterSpacing: 3, color: 'rgba(255,255,255,0.35)', fontWeight: '600' },
   lifetimeCount: { fontSize: 28, color: 'rgba(255,255,255,0.5)', fontWeight: '700' },
+  accountBtn: { position: 'absolute', right: 24, top: 4, padding: 4 },
+  accountText: { fontSize: 18, color: 'rgba(255,255,255,0.3)' },
   centerBlock: { alignItems: 'center', gap: 12 },
   todayLabel: { fontSize: 11, letterSpacing: 3, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
   todayCount: { fontSize: 72, color: '#FFFFFF', fontWeight: '900', lineHeight: 80 },

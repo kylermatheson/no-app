@@ -35,6 +35,10 @@ async function saveState(state: AppState): Promise<void> {
   await AsyncStorage.setItem(KEY, JSON.stringify(state));
 }
 
+export async function saveStateRaw(state: AppState): Promise<void> {
+  await AsyncStorage.setItem(KEY, JSON.stringify(state));
+}
+
 function getOrCreateToday(state: AppState): DailyRecord {
   const today = todayStr();
   let record = state.dailyRecords.find((r) => r.date === today);
