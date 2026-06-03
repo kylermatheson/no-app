@@ -19,10 +19,10 @@ type Props = {
   refreshKey: number;
   onNOLogged?: () => void;
   session?: Session | null;
-  onSignOut?: () => void;
+  onSettingsPress?: () => void;
 };
 
-export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, session, onSignOut }: Props) {
+export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, session, onSettingsPress }: Props) {
   const [appState, setAppState] = useState<AppState>({ lifetimeNoCount: 0, dailyRecords: [] });
   const todayCount = getTodayRecord(appState).noCount;
   const counterAnim = useRef(new Animated.Value(1)).current;
@@ -65,9 +65,9 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
             <Text style={styles.lifetimeLabel}>LIFETIME</Text>
             <Text style={styles.lifetimeCount}>{appState.lifetimeNoCount}</Text>
           </View>
-          {onSignOut && (
-            <TouchableOpacity onPress={onSignOut} style={styles.accountBtn}>
-              <Text style={styles.accountText}>{session ? '⚙︎' : 'Sign in'}</Text>
+          {onSettingsPress && (
+            <TouchableOpacity onPress={onSettingsPress} style={styles.accountBtn}>
+              <Text style={styles.accountText}>⚙︎</Text>
             </TouchableOpacity>
           )}
         </View>

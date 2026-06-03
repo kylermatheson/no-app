@@ -5,6 +5,7 @@ import { Session } from '@supabase/supabase-js';
 import MainScreen from './src/screens/MainScreen';
 import SlipConfirmationScreen from './src/screens/SlipConfirmationScreen';
 import AuthScreen from './src/screens/AuthScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 import { loadState, getTodayRecord } from './src/store/storage';
 import { supabase } from './src/lib/supabase';
 import { pullAndMergeFromCloud } from './src/store/cloudStorage';
@@ -45,6 +46,7 @@ export default function App() {
   const [view, setView] = useState<AppView>('loading');
   const [session, setSession] = useState<Session | null>(null);
   const [slipModal, setSlipModal] = useState(false);
+  const [settingsModal, setSettingsModal] = useState(false);
   const [nosBefore, setNosBefore] = useState(0);
   const [mainRefreshKey, setMainRefreshKey] = useState(0);
 
@@ -118,11 +120,19 @@ export default function App() {
         refreshKey={mainRefreshKey}
         onNOLogged={handleNOLogged}
         session={session}
-        onSignOut={async () => {
-          await supabase.auth.signOut();
-          setView('auth');
-        }}
+        onSettingsPress={() => setSettingsModal(true)}
       />
+      <Modal visible={settingsModal} animationType="slide" presentationStyle="pageSheet">
+        <SettingsScreen
+          session={session}
+          onClose={() => setSettingsModal(false)}
+          onSignOut={async () => {
+            setSettingsModal(false);
+            await supabase.auth.signOut();
+            setView('auth');
+          }}
+        />
+      </Modal>
       <Modal visible={slipModal} animationType="slide" presentationStyle="pageSheet">
         <SlipConfirmationScreen
           nosBefore={nosBefore}
