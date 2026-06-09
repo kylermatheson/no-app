@@ -4,15 +4,25 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   SafeAreaView,
   StatusBar,
+  AccessibilityInfo,
+  Platform,
+  Animated as RNAnimated,
 } from 'react-native';
 import { AppState as RNAppState } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { Session } from '@supabase/supabase-js';
 import { AppState, getTodayRecord, loadState, logNo } from '../store/storage';
 import { cloudLogNo } from '../store/cloudStorage';
 import NOButton from '../components/NOButton';
+import BloomOverlay, { BloomPhase } from '../components/BloomOverlay';
+import BreathTextOverlay from '../components/BreathTextOverlay';
+import { COLORS, ANIM_DURATIONS } from '../constants/noLogAnimation';
 
 type Props = {
   onSlipPress: (todayNOs: number) => void;
@@ -24,8 +34,13 @@ type Props = {
 
 export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, session, onSettingsPress }: Props) {
   const [appState, setAppState] = useState<AppState>({ lifetimeNoCount: 0, dailyRecords: [] });
+  const [phase, setPhase] = useState<BloomPhase>('IDLE');
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const phaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdProgress = useRef(new RNAnimated.Value(0)).current;
+
   const todayCount = getTodayRecord(appState).noCount;
-  const counterAnim = useRef(new Animated.Value(1)).current;
+  const counterScale = useSharedValue(1);
 
   const reload = useCallback(async () => {
     const s = await loadState();
@@ -41,71 +56,137 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
     return () => sub.remove();
   }, []);
 
-  async function handleNO() {
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const mq = (window as any).matchMedia?.('(prefers-reduced-motion: reduce)');
+      setReducedMotion(mq?.matches ?? false);
+    } else {
+      AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
+    }
+  }, []);
+
+  function clearPhaseTimer() {
+    if (phaseTimer.current) {
+      clearTimeout(phaseTimer.current);
+      phaseTimer.current = null;
+    }
+  }
+
+  function handleHoldStart() {
+    if (phase !== 'IDLE') return;
+    setPhase('HOLDING');
+  }
+
+  function handleHoldCancel() {
+    clearPhaseTimer();
+    setPhase('IDLE');
+  }
+
+  async function handleConfirmed() {
+    // Persist the NO immediately at confirm (1500ms), before animation completes
     const s = await logNo();
     setAppState(s);
     onNOLogged?.();
-    // Fire-and-forget cloud sync
     if (session?.user?.id) {
       cloudLogNo(session.user.id).catch(() => {});
     }
-    Animated.sequence([
-      Animated.timing(counterAnim, { toValue: 1.35, duration: 120, useNativeDriver: true }),
-      Animated.timing(counterAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
-    ]).start();
+
+    // Spring-bounce counter
+    if (reducedMotion) {
+      counterScale.value = 1;
+    } else {
+      counterScale.value = withSpring(1.35, { damping: 8, stiffness: 180 }, () => {
+        counterScale.value = withSpring(1, { damping: 14, stiffness: 240 });
+      });
+    }
+
+    // Advance phase: BLOOM → DWELL → RECEDE → IDLE
+    clearPhaseTimer();
+    setPhase('BLOOM');
+    phaseTimer.current = setTimeout(() => {
+      setPhase('DWELL');
+      phaseTimer.current = setTimeout(() => {
+        setPhase('RECEDE');
+        phaseTimer.current = setTimeout(() => {
+          setPhase('IDLE');
+        }, ANIM_DURATIONS.RECEDE);
+      }, ANIM_DURATIONS.DWELL);
+    }, ANIM_DURATIONS.BLOOM);
   }
 
+  const counterAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: counterScale.value }],
+  }));
+
+  const locked = phase !== 'IDLE' && phase !== 'HOLDING';
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" />
-      <View style={styles.container}>
-        {/* Top row: lifetime count + account indicator */}
-        <View style={styles.topRow}>
-          <View style={styles.lifetimeBlock}>
-            <Text style={styles.lifetimeLabel}>LIFETIME</Text>
-            <Text style={styles.lifetimeCount}>{appState.lifetimeNoCount}</Text>
+    <View style={styles.root}>
+      <StatusBar barStyle={locked ? 'light-content' : 'dark-content'} />
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.container}>
+          {/* Top row */}
+          <View style={styles.topRow}>
+            <View style={styles.lifetimeBlock}>
+              <Text style={styles.lifetimeLabel}>LIFETIME</Text>
+              <Text style={styles.lifetimeCount}>{appState.lifetimeNoCount}</Text>
+            </View>
+            {onSettingsPress && (
+              <TouchableOpacity onPress={onSettingsPress} style={styles.accountBtn}>
+                <Text style={styles.accountText}>⚙︎</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          {onSettingsPress && (
-            <TouchableOpacity onPress={onSettingsPress} style={styles.accountBtn}>
-              <Text style={styles.accountText}>⚙︎</Text>
-            </TouchableOpacity>
-          )}
-        </View>
 
-        <View style={styles.centerBlock}>
-          <Text style={styles.todayLabel}>TODAY</Text>
-          <Animated.Text style={[styles.todayCount, { transform: [{ scale: counterAnim }] }]}>
-            {todayCount}
-          </Animated.Text>
-          <NOButton onConfirmed={handleNO} />
-          <Text style={styles.hint}>hold 1.5 s to log</Text>
-        </View>
+          <View style={styles.centerBlock}>
+            <Text style={styles.todayLabel}>TODAY</Text>
+            <Animated.Text style={[styles.todayCount, counterAnimStyle]}>
+              {todayCount}
+            </Animated.Text>
+            <NOButton
+              onHoldStart={handleHoldStart}
+              onHoldCancel={handleHoldCancel}
+              onConfirmed={handleConfirmed}
+              locked={locked}
+              holdProgress={holdProgress}
+            />
+            <Text style={styles.hint}>hold 1.5 s to log</Text>
+          </View>
 
-        <TouchableOpacity
-          style={styles.slipButton}
-          onPress={() => onSlipPress(todayCount)}
-          activeOpacity={0.6}
-        >
-          <Text style={styles.slipLabel}>I slipped</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          <TouchableOpacity
+            style={styles.slipButton}
+            onPress={() => onSlipPress(todayCount)}
+            activeOpacity={0.6}
+            disabled={locked}
+          >
+            <Text style={styles.slipLabel}>I slipped</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+
+      {/* Full-screen bloom overlay — rendered outside SafeAreaView to cover status bar area */}
+      <BloomOverlay phase={phase} reducedMotion={reducedMotion} />
+
+      {/* Breath text above bloom */}
+      <BreathTextOverlay phase={phase} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0D0D1A' },
+  root: { flex: 1, backgroundColor: COLORS.BG_DEFAULT },
+  safe: { flex: 1, backgroundColor: 'transparent' },
   container: { flex: 1, alignItems: 'center', justifyContent: 'space-between', paddingVertical: 32 },
   topRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', width: '100%', paddingHorizontal: 24 },
   lifetimeBlock: { alignItems: 'center', gap: 2, flex: 1 },
-  lifetimeLabel: { fontSize: 11, letterSpacing: 3, color: 'rgba(255,255,255,0.35)', fontWeight: '600' },
-  lifetimeCount: { fontSize: 28, color: 'rgba(255,255,255,0.5)', fontWeight: '700' },
+  lifetimeLabel: { fontSize: 11, letterSpacing: 3, color: COLORS.TEXT_FAINT, fontWeight: '600' },
+  lifetimeCount: { fontSize: 28, color: COLORS.TEXT_DIM, fontWeight: '700' },
   accountBtn: { position: 'absolute', right: 24, top: 4, padding: 4 },
-  accountText: { fontSize: 18, color: 'rgba(255,255,255,0.3)' },
+  accountText: { fontSize: 18, color: COLORS.TEXT_FAINT },
   centerBlock: { alignItems: 'center', gap: 12 },
-  todayLabel: { fontSize: 11, letterSpacing: 3, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
-  todayCount: { fontSize: 72, color: '#FFFFFF', fontWeight: '900', lineHeight: 80 },
-  hint: { fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 8, letterSpacing: 1 },
+  todayLabel: { fontSize: 11, letterSpacing: 3, color: COLORS.TEXT_DIM, fontWeight: '600' },
+  todayCount: { fontSize: 72, color: COLORS.TEXT_ON_WHITE, fontWeight: '900', lineHeight: 80 },
+  hint: { fontSize: 11, color: COLORS.TEXT_FAINT, marginTop: 8, letterSpacing: 1 },
   slipButton: { paddingVertical: 8, paddingHorizontal: 20 },
-  slipLabel: { fontSize: 13, color: 'rgba(255,255,255,0.25)', letterSpacing: 1 },
+  slipLabel: { fontSize: 13, color: COLORS.TEXT_FAINT, letterSpacing: 1 },
 });

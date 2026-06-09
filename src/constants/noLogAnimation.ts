@@ -1,0 +1,22 @@
+export const ANIM_DURATIONS = {
+  HOLD: 1500,
+  BLOOM: 600,
+  DWELL: 1500,
+  DWELL_PULSE_DELAY: 400,
+  DWELL_PULSE_DURATION: 280,
+  RECEDE: 900,
+  INHALE_FADE_IN: 400,
+  RING_DISSOLVE: 400,
+  RING_DISSOLVE_DELAY: 400, // ms into DWELL before ring dissolves
+} as const;
+
+export const COLORS = {
+  BG_DEFAULT: '#FFFFFF',
+  BLOOM_FILL: '#5BA3C7',
+  ACCENT_OCEAN: '#7FB9D4',
+  BREATH_TEXT_ON_BLUE: '#FFFFFF',
+  TEXT_ON_WHITE: '#1A2B33',
+  TEXT_DIM: 'rgba(26,43,51,0.4)',
+  TEXT_FAINT: 'rgba(26,43,51,0.25)',
+  RING_COLOR: '#7FB9D4',
+} as const;
