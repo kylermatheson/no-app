@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -6,40 +6,46 @@ import {
   Animated as RNAnimated,
   Platform,
 } from 'react-native';
-import WaveRipple from './WaveRipple';
+import { COLORS, ANIM_DURATIONS } from '../constants/noLogAnimation';
 
-// Haptics only available on native
-let Haptics: { impactAsync: (style: any) => void; ImpactFeedbackStyle: { Heavy: any } } | null = null;
+// Haptics — native enhancement only
+let Haptics: { impactAsync: (style: any) => void; ImpactFeedbackStyle: { Medium: any } } | null = null;
 if (Platform.OS !== 'web') {
-  Haptics = require('expo-haptics');
+  try { Haptics = require('expo-haptics'); } catch {}
 }
 
-const HOLD_DURATION = 1500;
-
 type Props = {
+  onHoldStart: () => void;
+  onHoldCancel: () => void;
   onConfirmed: () => void;
+  locked: boolean;
+  holdProgress: RNAnimated.Value;
 };
 
-export default function NOButton({ onConfirmed }: Props) {
-  const [rippleVisible, setRippleVisible] = useState(false);
-  const progress = useRef(new RNAnimated.Value(0)).current;
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+export default function NOButton({ onHoldStart, onHoldCancel, onConfirmed, locked, holdProgress }: Props) {
   const scale = useRef(new RNAnimated.Value(1)).current;
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isHolding = useRef(false);
 
   function startHold() {
-    if (isHolding.current) return;
+    if (locked || isHolding.current) return;
     isHolding.current = true;
     RNAnimated.timing(scale, { toValue: 0.93, duration: 150, useNativeDriver: true }).start();
-    progress.setValue(0);
-    RNAnimated.timing(progress, {
+    holdProgress.setValue(0);
+    RNAnimated.timing(holdProgress, {
       toValue: 1,
-      duration: HOLD_DURATION,
+      duration: ANIM_DURATIONS.HOLD,
       useNativeDriver: false,
     }).start();
+    onHoldStart();
     holdTimer.current = setTimeout(() => {
-      fireConfirmed();
-    }, HOLD_DURATION);
+      isHolding.current = false;
+      RNAnimated.timing(scale, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+      if (Haptics) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      onConfirmed();
+    }, ANIM_DURATIONS.HOLD);
   }
 
   function cancelHold() {
@@ -47,39 +53,25 @@ export default function NOButton({ onConfirmed }: Props) {
     isHolding.current = false;
     if (holdTimer.current) clearTimeout(holdTimer.current);
     holdTimer.current = null;
-    progress.stopAnimation();
-    progress.setValue(0);
+    holdProgress.stopAnimation();
+    RNAnimated.timing(holdProgress, { toValue: 0, duration: 200, useNativeDriver: false }).start();
     RNAnimated.timing(scale, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+    onHoldCancel();
   }
 
-  function fireConfirmed() {
-    isHolding.current = false;
-    RNAnimated.timing(scale, { toValue: 1, duration: 150, useNativeDriver: true }).start();
-    if (Haptics) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    } else if (Platform.OS === 'web' && 'vibrate' in navigator) {
-      navigator.vibrate(80);
-    }
-    setRippleVisible(true);
-    onConfirmed();
-  }
-
-  const ringColor = progress.interpolate({
+  const ringBorderColor = holdProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.9)'],
+    outputRange: [`${COLORS.ACCENT_OCEAN}33`, COLORS.ACCENT_OCEAN],
   });
 
-  // Web uses pointer events for reliable cross-browser hold detection
   const webHandlers = Platform.OS === 'web' ? {
     onPointerDown: (e: any) => { e.preventDefault(); startHold(); },
     onPointerUp: () => cancelHold(),
     onPointerLeave: () => cancelHold(),
     onPointerCancel: () => cancelHold(),
-    // Block context menu on long-press (mobile browsers)
     onContextMenu: (e: any) => e.preventDefault(),
   } : {};
 
-  // Native uses PanResponder via responder props
   const nativeHandlers = Platform.OS !== 'web' ? {
     onStartShouldSetResponder: () => true,
     onResponderGrant: () => startHold(),
@@ -89,8 +81,7 @@ export default function NOButton({ onConfirmed }: Props) {
 
   return (
     <View style={styles.wrapper}>
-      <RNAnimated.View style={[styles.outerRing, { borderColor: ringColor }]} />
-      <WaveRipple visible={rippleVisible} onDone={() => setRippleVisible(false)} />
+      <RNAnimated.View style={[styles.outerRing, { borderColor: ringBorderColor }]} />
       <RNAnimated.View
         style={[styles.button, { transform: [{ scale }] }]}
         {...webHandlers}
@@ -113,17 +104,15 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: '#1A1A2E',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
+    backgroundColor: COLORS.ACCENT_OCEAN,
+    borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    // Prevent browser default touch behaviors
+    elevation: 4,
+    shadowColor: COLORS.ACCENT_OCEAN,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
     ...Platform.select({ web: { cursor: 'pointer', touchAction: 'none', WebkitUserSelect: 'none' } as any }),
   },
   label: {

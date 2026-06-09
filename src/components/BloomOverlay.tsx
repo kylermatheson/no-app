@@ -1,0 +1,104 @@
+import React, { useEffect } from 'react';
+import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  withDelay,
+  Easing,
+} from 'react-native-reanimated';
+import { ANIM_DURATIONS, COLORS } from '../constants/noLogAnimation';
+
+export type BloomPhase = 'IDLE' | 'HOLDING' | 'BLOOM' | 'DWELL' | 'RECEDE';
+
+type Props = {
+  phase: BloomPhase;
+  reducedMotion: boolean;
+};
+
+export default function BloomOverlay({ phase, reducedMotion }: Props) {
+  const { width, height } = useWindowDimensions();
+  // Circle must cover viewport corners from center: diameter = 2 * diagonal
+  const diagonal = Math.sqrt(width * width + height * height);
+  const circleSize = diagonal * 2;
+
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (phase === 'BLOOM') {
+      opacity.value = 1;
+      if (reducedMotion) {
+        scale.value = 1; // instant cover via opacity below
+        opacity.value = withTiming(1, { duration: ANIM_DURATIONS.BLOOM });
+      } else {
+        scale.value = withTiming(1, {
+          duration: ANIM_DURATIONS.BLOOM,
+          easing: Easing.out(Easing.quad),
+        });
+      }
+    } else if (phase === 'DWELL') {
+      opacity.value = withSequence(
+        withDelay(
+          ANIM_DURATIONS.DWELL_PULSE_DELAY,
+          withTiming(0.92, {
+            duration: ANIM_DURATIONS.DWELL_PULSE_DURATION / 2,
+            easing: Easing.inOut(Easing.quad),
+          }),
+        ),
+        withTiming(1.0, {
+          duration: ANIM_DURATIONS.DWELL_PULSE_DURATION / 2,
+          easing: Easing.inOut(Easing.quad),
+        }),
+      );
+    } else if (phase === 'RECEDE') {
+      if (reducedMotion) {
+        scale.value = 1;
+        opacity.value = withTiming(0, { duration: ANIM_DURATIONS.RECEDE });
+      } else {
+        scale.value = withTiming(0, {
+          duration: ANIM_DURATIONS.RECEDE,
+          easing: Easing.inOut(Easing.quad),
+        });
+        opacity.value = 1;
+      }
+    } else if (phase === 'IDLE' || phase === 'HOLDING') {
+      scale.value = 0;
+      opacity.value = 1;
+    }
+  }, [phase]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  if (phase === 'IDLE' || phase === 'HOLDING') return null;
+
+  return (
+    <Animated.View
+      style={[
+        styles.overlay,
+        {
+          width: circleSize,
+          height: circleSize,
+          borderRadius: circleSize / 2,
+          marginLeft: -circleSize / 2 + width / 2,
+          marginTop: -circleSize / 2 + height / 2,
+        },
+        animStyle,
+      ]}
+      pointerEvents="none"
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    backgroundColor: COLORS.BLOOM_FILL,
+    // Ensure it renders above other content
+    ...Platform.select({ web: { zIndex: 10 } as any }),
+  },
+});

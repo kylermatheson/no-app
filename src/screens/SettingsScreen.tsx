@@ -18,7 +18,7 @@ type Props = {
 export default function SettingsScreen({ session, onSignOut, onClose }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
@@ -44,17 +44,17 @@ export default function SettingsScreen({ session, onSignOut, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0D0D1A' },
+  safe: { flex: 1, backgroundColor: '#FFFFFF' },
   container: { flex: 1, paddingHorizontal: 24, paddingVertical: 16 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 },
-  title: { fontSize: 22, color: '#FFFFFF', fontWeight: '700', letterSpacing: 1 },
+  title: { fontSize: 22, color: '#1A2B33', fontWeight: '700', letterSpacing: 1 },
   closeBtn: { padding: 8 },
-  closeText: { fontSize: 18, color: 'rgba(255,255,255,0.4)' },
+  closeText: { fontSize: 18, color: 'rgba(26,43,51,0.35)' },
   section: { marginBottom: 32 },
-  sectionLabel: { fontSize: 11, letterSpacing: 3, color: 'rgba(255,255,255,0.35)', fontWeight: '600', marginBottom: 12 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255,255,255,0.1)' },
-  rowLabel: { fontSize: 15, color: 'rgba(255,255,255,0.6)' },
-  rowValue: { fontSize: 15, color: 'rgba(255,255,255,0.4)', maxWidth: '60%', textAlign: 'right' },
-  signOutBtn: { marginTop: 'auto', paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,80,80,0.4)', borderRadius: 8 },
-  signOutText: { fontSize: 15, color: 'rgba(255,80,80,0.8)', fontWeight: '600', letterSpacing: 0.5 },
+  sectionLabel: { fontSize: 11, letterSpacing: 3, color: 'rgba(26,43,51,0.35)', fontWeight: '600', marginBottom: 12 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(26,43,51,0.1)' },
+  rowLabel: { fontSize: 15, color: 'rgba(26,43,51,0.6)' },
+  rowValue: { fontSize: 15, color: 'rgba(26,43,51,0.4)', maxWidth: '60%', textAlign: 'right' },
+  signOutBtn: { marginTop: 'auto', paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(200,50,50,0.35)', borderRadius: 8 },
+  signOutText: { fontSize: 15, color: 'rgba(190,40,40,0.8)', fontWeight: '600', letterSpacing: 0.5 },
 });

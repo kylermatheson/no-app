@@ -69,7 +69,7 @@ export default function SlipConfirmationScreen({ nosBefore, onConfirm, onCancel,
               <TextInput
                 style={styles.input}
                 placeholder="Describe it..."
-                placeholderTextColor="rgba(255,255,255,0.3)"
+                placeholderTextColor="rgba(26,43,51,0.3)"
                 value={customTrigger}
                 onChangeText={setCustomTrigger}
                 maxLength={60}
@@ -92,26 +92,26 @@ export default function SlipConfirmationScreen({ nosBefore, onConfirm, onCancel,
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0D0D1A' },
+  safe: { flex: 1, backgroundColor: '#FFFFFF' },
   container: { padding: 32, gap: 36 },
   header: { alignItems: 'center', gap: 12, paddingTop: 16 },
   wave: { fontSize: 48 },
-  reframe: { fontSize: 22, color: '#FFFFFF', fontWeight: '700', textAlign: 'center', lineHeight: 30 },
-  evidenceBlock: { alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 24 },
-  evidenceLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: 0.5, textAlign: 'center' },
-  evidenceCount: { fontSize: 80, color: '#FFFFFF', fontWeight: '900', lineHeight: 88 },
-  evidenceSubtext: { fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4, textAlign: 'center' },
+  reframe: { fontSize: 22, color: '#1A2B33', fontWeight: '700', textAlign: 'center', lineHeight: 30 },
+  evidenceBlock: { alignItems: 'center', gap: 4, backgroundColor: 'rgba(26,43,51,0.04)', borderRadius: 16, padding: 24 },
+  evidenceLabel: { fontSize: 13, color: 'rgba(26,43,51,0.45)', letterSpacing: 0.5, textAlign: 'center' },
+  evidenceCount: { fontSize: 80, color: '#1A2B33', fontWeight: '900', lineHeight: 88 },
+  evidenceSubtext: { fontSize: 12, color: 'rgba(26,43,51,0.3)', marginTop: 4, textAlign: 'center' },
   triggerSection: { gap: 12 },
-  triggerLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: 0.5 },
+  triggerLabel: { fontSize: 13, color: 'rgba(26,43,51,0.45)', letterSpacing: 0.5 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  chipSelected: { backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.6)' },
-  chipText: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
-  chipTextSelected: { color: '#FFFFFF' },
-  input: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: 12, color: '#FFFFFF', fontSize: 14 },
+  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(26,43,51,0.18)' },
+  chipSelected: { backgroundColor: 'rgba(91,163,199,0.12)', borderColor: '#7FB9D4' },
+  chipText: { fontSize: 13, color: 'rgba(26,43,51,0.45)' },
+  chipTextSelected: { color: '#5BA3C7' },
+  input: { borderWidth: 1, borderColor: 'rgba(26,43,51,0.18)', borderRadius: 10, padding: 12, color: '#1A2B33', fontSize: 14 },
   actions: { gap: 12, paddingBottom: 16 },
-  confirmBtn: { backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16, alignItems: 'center' },
-  confirmText: { fontSize: 15, fontWeight: '700', color: '#0D0D1A' },
+  confirmBtn: { backgroundColor: '#7FB9D4', borderRadius: 12, padding: 16, alignItems: 'center' },
+  confirmText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   cancelBtn: { padding: 14, alignItems: 'center' },
-  cancelText: { fontSize: 14, color: 'rgba(255,255,255,0.35)' },
+  cancelText: { fontSize: 14, color: 'rgba(26,43,51,0.35)' },
 });

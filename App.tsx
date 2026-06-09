@@ -146,5 +146,6 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0D1A' },
+  root: { flex: 1, backgroundColor: '#FFFFFF' },
+  centered: { alignItems: 'center', justifyContent: 'center' },
 });
