@@ -74,8 +74,7 @@ export default function BloomOverlay({ phase, reducedMotion }: Props) {
     opacity: opacity.value,
   }));
 
-  if (phase === 'IDLE' || phase === 'HOLDING') return null;
-
+  // Always mounted — never unmount/remount, which would cause a flash at scale=0
   return (
     <Animated.View
       style={[

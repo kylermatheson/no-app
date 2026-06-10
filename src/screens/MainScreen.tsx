@@ -83,24 +83,7 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
   }
 
   async function handleConfirmed() {
-    // Persist the NO immediately at confirm (1500ms), before animation completes
-    const s = await logNo();
-    setAppState(s);
-    onNOLogged?.();
-    if (session?.user?.id) {
-      cloudLogNo(session.user.id).catch(() => {});
-    }
-
-    // Spring-bounce counter
-    if (reducedMotion) {
-      counterScale.value = 1;
-    } else {
-      counterScale.value = withSpring(1.35, { damping: 8, stiffness: 180 }, () => {
-        counterScale.value = withSpring(1, { damping: 14, stiffness: 240 });
-      });
-    }
-
-    // Advance phase: BLOOM → DWELL → RECEDE → IDLE
+    // Start bloom immediately — don't wait for storage write
     clearPhaseTimer();
     setPhase('BLOOM');
     phaseTimer.current = setTimeout(() => {
@@ -112,6 +95,22 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
         }, ANIM_DURATIONS.RECEDE);
       }, ANIM_DURATIONS.DWELL);
     }, ANIM_DURATIONS.BLOOM);
+
+    // Persist + update state in parallel with bloom animation
+    const s = await logNo();
+    setAppState(s);
+    onNOLogged?.();
+    if (session?.user?.id) {
+      cloudLogNo(session.user.id).catch(() => {});
+    }
+
+    // Spring-bounce counter: damping ~0.55 → single clean overshoot, ~1 bounce
+    if (!reducedMotion) {
+      counterScale.value = withSpring(1.3, { damping: 14, stiffness: 200 }, () => {
+        'worklet';
+        counterScale.value = withSpring(1, { damping: 18, stiffness: 220 });
+      });
+    }
   }
 
   const counterAnimStyle = useAnimatedStyle(() => ({
