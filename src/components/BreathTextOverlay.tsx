@@ -73,9 +73,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     fontSize: 18,
-    fontWeight: '300',
+    fontWeight: '700',
     letterSpacing: 2,
-    bottom: '35%',
+    top: '28%',
     ...Platform.select({ web: { zIndex: 20, userSelect: 'none' } as any }),
   },
 });
