@@ -23,6 +23,7 @@ import { cloudLogNo } from '../store/cloudStorage';
 import NOButton from '../components/NOButton';
 import BloomOverlay, { BloomPhase } from '../components/BloomOverlay';
 import BreathTextOverlay from '../components/BreathTextOverlay';
+import MilestoneOverlay, { isMilestoneCount } from '../components/MilestoneOverlay';
 import { COLORS, ANIM_DURATIONS } from '../constants/noLogAnimation';
 
 type Props = {
@@ -36,6 +37,7 @@ type Props = {
 export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, session, onSettingsPress }: Props) {
   const [appState, setAppState] = useState<AppState>({ lifetimeNoCount: 0, dailyRecords: [] });
   const [phase, setPhase] = useState<BloomPhase>('IDLE');
+  const [celebratingLifetime, setCelebratingLifetime] = useState<number>(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const phaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdProgress = useRef(new RNAnimated.Value(0)).current;
@@ -86,26 +88,34 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
   }
 
   async function handleConfirmed() {
-    // Start bloom immediately — don't wait for storage write
     clearPhaseTimer();
     setPhase('BLOOM');
-    phaseTimer.current = setTimeout(() => {
-      setPhase('DWELL');
-      phaseTimer.current = setTimeout(() => {
-        setPhase('RECEDE');
-        phaseTimer.current = setTimeout(() => {
-          setPhase('IDLE');
-        }, ANIM_DURATIONS.RECEDE);
-      }, ANIM_DURATIONS.DWELL);
-    }, ANIM_DURATIONS.BLOOM);
 
-    // Persist + update state in parallel with bloom animation
+    // Persist in parallel with bloom animation
     const s = await logNo();
     setAppState(s);
     onNOLogged?.();
     if (session?.user?.id) {
       cloudLogNo(session.user.id).catch(() => {});
     }
+
+    const milestone = isMilestoneCount(s.lifetimeNoCount);
+
+    phaseTimer.current = setTimeout(() => {
+      if (milestone) {
+        setCelebratingLifetime(s.lifetimeNoCount);
+        setPhase('CELEBRATE');
+        // No auto-advance — user must dismiss via X
+      } else {
+        setPhase('DWELL');
+        phaseTimer.current = setTimeout(() => {
+          setPhase('RECEDE');
+          phaseTimer.current = setTimeout(() => {
+            setPhase('IDLE');
+          }, ANIM_DURATIONS.RECEDE);
+        }, ANIM_DURATIONS.DWELL);
+      }
+    }, ANIM_DURATIONS.BLOOM);
 
     // Spring-bounce counter: damping ~0.55 → single clean overshoot, ~1 bounce
     if (!reducedMotion) {
@@ -114,6 +124,15 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
         counterScale.value = withSpring(1, { damping: 18, stiffness: 220 });
       });
     }
+  }
+
+  function handleMilestoneDismiss() {
+    clearPhaseTimer();
+    setPhase('RECEDE');
+    phaseTimer.current = setTimeout(() => {
+      setPhase('IDLE');
+      setCelebratingLifetime(0);
+    }, ANIM_DURATIONS.RECEDE);
   }
 
   const counterAnimStyle = useAnimatedStyle(() => ({
@@ -179,7 +198,14 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
       <BloomOverlay phase={phase} reducedMotion={reducedMotion} />
 
       {/* Breath text above bloom */}
-      <BreathTextOverlay phase={phase} buttonCenterY={buttonCenterY} />
+      <BreathTextOverlay phase={phase} buttonCenterY={buttonCenterY} isMilestone={celebratingLifetime > 0} />
+
+      {/* Milestone celebration — sits on top of bloom */}
+      <MilestoneOverlay
+        phase={phase}
+        lifetimeCount={celebratingLifetime}
+        onDismiss={handleMilestoneDismiss}
+      />
     </View>
   );
 }
