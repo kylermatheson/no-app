@@ -98,6 +98,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     backgroundColor: COLORS.BLOOM_FILL,
     // Ensure it renders above other content
-    ...Platform.select({ web: { zIndex: 10 } as any }),
+    ...Platform.select({ web: { zIndex: 10 } as any, default: { zIndex: 10 } }),
   },
 });

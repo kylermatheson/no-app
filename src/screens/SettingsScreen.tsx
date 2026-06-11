@@ -8,6 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { Session } from '@supabase/supabase-js';
+import { COLORS } from '../constants/noLogAnimation';
 
 type Props = {
   session: Session | null;
@@ -44,10 +45,10 @@ export default function SettingsScreen({ session, onSignOut, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: COLORS.BG_DEFAULT },
   container: { flex: 1, paddingHorizontal: 24, paddingVertical: 16 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 },
-  title: { fontSize: 22, color: '#1A2B33', fontWeight: '700', letterSpacing: 1 },
+  title: { fontSize: 22, color: COLORS.TEXT_ON_WHITE, fontWeight: '700', letterSpacing: 1 },
   closeBtn: { padding: 8 },
   closeText: { fontSize: 18, color: 'rgba(26,43,51,0.35)' },
   section: { marginBottom: 32 },

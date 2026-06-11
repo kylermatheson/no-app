@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, View, StyleSheet, Platform, ActivityIndicator } from 'react-native';
+import { COLORS } from './src/constants/noLogAnimation';
 import * as Notifications from 'expo-notifications';
 import { Session } from '@supabase/supabase-js';
 import MainScreen from './src/screens/MainScreen';
@@ -104,7 +105,7 @@ export default function App() {
   if (view === 'loading') {
     return (
       <View style={[styles.root, styles.centered]}>
-        <ActivityIndicator color="#FFFFFF" size="large" />
+        <ActivityIndicator color={COLORS.ACCENT_OCEAN} size="large" />
       </View>
     );
   }

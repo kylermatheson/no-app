@@ -13,6 +13,7 @@ import {
 import { Session } from '@supabase/supabase-js';
 import { logSlip } from '../store/storage';
 import { cloudLogSlip } from '../store/cloudStorage';
+import { COLORS } from '../constants/noLogAnimation';
 
 const PRESET_TRIGGERS = ['Stress', 'Boredom', 'Loneliness', 'Late night', 'Other'];
 
@@ -92,26 +93,26 @@ export default function SlipConfirmationScreen({ nosBefore, onConfirm, onCancel,
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: COLORS.BG_DEFAULT },
   container: { padding: 32, gap: 36 },
   header: { alignItems: 'center', gap: 12, paddingTop: 16 },
   wave: { fontSize: 48 },
-  reframe: { fontSize: 22, color: '#1A2B33', fontWeight: '700', textAlign: 'center', lineHeight: 30 },
+  reframe: { fontSize: 22, color: COLORS.TEXT_ON_WHITE, fontWeight: '700', textAlign: 'center', lineHeight: 30 },
   evidenceBlock: { alignItems: 'center', gap: 4, backgroundColor: 'rgba(26,43,51,0.04)', borderRadius: 16, padding: 24 },
   evidenceLabel: { fontSize: 13, color: 'rgba(26,43,51,0.45)', letterSpacing: 0.5, textAlign: 'center' },
-  evidenceCount: { fontSize: 80, color: '#1A2B33', fontWeight: '900', lineHeight: 88 },
+  evidenceCount: { fontSize: 80, color: COLORS.TEXT_ON_WHITE, fontWeight: '900', lineHeight: 88 },
   evidenceSubtext: { fontSize: 12, color: 'rgba(26,43,51,0.3)', marginTop: 4, textAlign: 'center' },
   triggerSection: { gap: 12 },
   triggerLabel: { fontSize: 13, color: 'rgba(26,43,51,0.45)', letterSpacing: 0.5 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(26,43,51,0.18)' },
-  chipSelected: { backgroundColor: 'rgba(91,163,199,0.12)', borderColor: '#7FB9D4' },
+  chipSelected: { backgroundColor: 'rgba(91,163,199,0.12)', borderColor: COLORS.ACCENT_OCEAN },
   chipText: { fontSize: 13, color: 'rgba(26,43,51,0.45)' },
-  chipTextSelected: { color: '#5BA3C7' },
-  input: { borderWidth: 1, borderColor: 'rgba(26,43,51,0.18)', borderRadius: 10, padding: 12, color: '#1A2B33', fontSize: 14 },
+  chipTextSelected: { color: COLORS.BLOOM_FILL },
+  input: { borderWidth: 1, borderColor: 'rgba(26,43,51,0.18)', borderRadius: 10, padding: 12, color: COLORS.TEXT_ON_WHITE, fontSize: 14 },
   actions: { gap: 12, paddingBottom: 16 },
-  confirmBtn: { backgroundColor: '#7FB9D4', borderRadius: 12, padding: 16, alignItems: 'center' },
-  confirmText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  confirmBtn: { backgroundColor: COLORS.ACCENT_OCEAN, borderRadius: 12, padding: 16, alignItems: 'center' },
+  confirmText: { fontSize: 15, fontWeight: '700', color: COLORS.BREATH_TEXT_ON_BLUE },
   cancelBtn: { padding: 14, alignItems: 'center' },
   cancelText: { fontSize: 14, color: 'rgba(26,43,51,0.35)' },
 });
