@@ -9,15 +9,17 @@ import Animated, {
 import { ANIM_DURATIONS, COLORS } from '../constants/noLogAnimation';
 import type { BloomPhase } from './BloomOverlay';
 
-const TEXT_ABOVE_BUTTON_CENTER = 80;
+// Distance to sit the breath text above the top of the "TODAY" label.
+const TEXT_ABOVE_TODAY = 36;
 
 type Props = {
   phase: BloomPhase;
-  buttonCenterY: number | null;
+  /** Window Y of the top of the "TODAY" label; text is placed above it. */
+  anchorTop: number | null;
   isMilestone?: boolean;
 };
 
-export default function BreathTextOverlay({ phase, buttonCenterY, isMilestone = false }: Props) {
+export default function BreathTextOverlay({ phase, anchorTop, isMilestone = false }: Props) {
   const inhaleOpacity = useSharedValue(0);
   const exhaleOpacity = useSharedValue(0);
 
@@ -57,8 +59,8 @@ export default function BreathTextOverlay({ phase, buttonCenterY, isMilestone = 
 
   if (phase === 'IDLE' || phase === 'CELEBRATE') return null;
 
-  const topPosition = buttonCenterY != null
-    ? buttonCenterY - TEXT_ABOVE_BUTTON_CENTER
+  const topPosition = anchorTop != null
+    ? anchorTop - TEXT_ABOVE_TODAY
     : undefined;
 
   const textStyle = [

@@ -44,8 +44,8 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
 
   const todayCount = getTodayRecord(appState).noCount;
   const counterScale = useSharedValue(1);
-  const [buttonCenterY, setButtonCenterY] = useState<number | null>(null);
-  const buttonWrapperRef = useRef<View>(null);
+  const [todayLabelTop, setTodayLabelTop] = useState<number | null>(null);
+  const todayLabelRef = useRef<Text>(null);
 
   const reload = useCallback(async () => {
     const s = await loadState();
@@ -160,18 +160,21 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
           </View>
 
           <View style={styles.centerBlock}>
-            <Text style={styles.todayLabel}>TODAY</Text>
-            <Animated.Text style={[styles.todayCount, counterAnimStyle]}>
-              {todayCount}
-            </Animated.Text>
-            <View
-              ref={buttonWrapperRef}
+            <Text
+              ref={todayLabelRef}
+              style={styles.todayLabel}
               onLayout={() => {
-                buttonWrapperRef.current?.measureInWindow((_x, y, _w, h) => {
-                  setButtonCenterY(y + h / 2);
+                todayLabelRef.current?.measureInWindow((_x, y) => {
+                  setTodayLabelTop(y);
                 });
               }}
             >
+              TODAY
+            </Text>
+            <Animated.Text style={[styles.todayCount, counterAnimStyle]}>
+              {todayCount}
+            </Animated.Text>
+            <View>
               <NOButton
                 onHoldStart={handleHoldStart}
                 onHoldCancel={handleHoldCancel}
@@ -198,7 +201,7 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
       <BloomOverlay phase={phase} reducedMotion={reducedMotion} />
 
       {/* Breath text above bloom */}
-      <BreathTextOverlay phase={phase} buttonCenterY={buttonCenterY} isMilestone={celebratingLifetime > 0} />
+      <BreathTextOverlay phase={phase} anchorTop={todayLabelTop} isMilestone={celebratingLifetime > 0} />
 
       {/* Milestone celebration — sits on top of bloom */}
       <MilestoneOverlay
