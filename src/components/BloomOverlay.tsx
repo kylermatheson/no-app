@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ANIM_DURATIONS, COLORS } from '../constants/noLogAnimation';
 
-export type BloomPhase = 'IDLE' | 'HOLDING' | 'BLOOM' | 'DWELL' | 'RECEDE';
+export type BloomPhase = 'IDLE' | 'HOLDING' | 'BLOOM' | 'DWELL' | 'CELEBRATE' | 'RECEDE';
 
 type Props = {
   phase: BloomPhase;
@@ -38,7 +38,7 @@ export default function BloomOverlay({ phase, reducedMotion }: Props) {
           easing: Easing.out(Easing.quad),
         });
       }
-    } else if (phase === 'DWELL') {
+    } else if (phase === 'DWELL' || phase === 'CELEBRATE') {
       opacity.value = withSequence(
         withDelay(
           ANIM_DURATIONS.DWELL_PULSE_DELAY,
