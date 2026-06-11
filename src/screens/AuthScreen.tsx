@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { COLORS } from '../constants/noLogAnimation';
 
 type Props = {
   onAuthSuccess: () => void;
@@ -119,7 +120,7 @@ export default function AuthScreen({ onAuthSuccess, onSkip }: Props) {
               disabled={loading || !email || !password}
             >
               {loading
-                ? <ActivityIndicator color="#FFFFFF" />
+                ? <ActivityIndicator color={COLORS.BREATH_TEXT_ON_BLUE} />
                 : <Text style={styles.submitText}>{mode === 'login' ? 'Sign in' : 'Create account'}</Text>
               }
             </TouchableOpacity>
@@ -136,36 +137,36 @@ export default function AuthScreen({ onAuthSuccess, onSkip }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: COLORS.BG_DEFAULT },
   container: { padding: 32, gap: 40, flexGrow: 1, justifyContent: 'center' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 },
   header: { alignItems: 'center', gap: 12 },
-  appName: { fontSize: 56, fontWeight: '900', color: '#1A2B33', letterSpacing: 8 },
+  appName: { fontSize: 56, fontWeight: '900', color: COLORS.TEXT_ON_WHITE, letterSpacing: 8 },
   tagline: { fontSize: 16, color: 'rgba(26,43,51,0.45)', textAlign: 'center', lineHeight: 24 },
   form: { gap: 12 },
   toggle: { flexDirection: 'row', backgroundColor: 'rgba(26,43,51,0.06)', borderRadius: 12, padding: 4, marginBottom: 4 },
   toggleBtn: { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: 'center' },
   toggleBtnActive: { backgroundColor: 'rgba(91,163,199,0.15)' },
   toggleText: { fontSize: 14, color: 'rgba(26,43,51,0.4)', fontWeight: '600' },
-  toggleTextActive: { color: '#5BA3C7', fontWeight: '700' },
+  toggleTextActive: { color: COLORS.BLOOM_FILL, fontWeight: '700' },
   input: {
     borderWidth: 1,
     borderColor: 'rgba(26,43,51,0.15)',
     borderRadius: 12,
     padding: 14,
-    color: '#1A2B33',
+    color: COLORS.TEXT_ON_WHITE,
     fontSize: 15,
     backgroundColor: 'rgba(26,43,51,0.03)',
   },
   errorText: { fontSize: 13, color: '#C0392B', textAlign: 'center' },
-  submitBtn: { backgroundColor: '#7FB9D4', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 4 },
+  submitBtn: { backgroundColor: COLORS.ACCENT_OCEAN, borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 4 },
   submitBtnDisabled: { opacity: 0.5 },
-  submitText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  submitText: { fontSize: 15, fontWeight: '700', color: COLORS.BREATH_TEXT_ON_BLUE },
   skipBtn: { alignItems: 'center', gap: 4, paddingVertical: 8 },
   skipText: { fontSize: 14, color: 'rgba(26,43,51,0.35)' },
   skipHint: { fontSize: 11, color: 'rgba(26,43,51,0.2)' },
   wave: { fontSize: 48 },
-  title: { fontSize: 22, fontWeight: '700', color: '#1A2B33' },
+  title: { fontSize: 22, fontWeight: '700', color: COLORS.TEXT_ON_WHITE },
   subtitle: { fontSize: 15, color: 'rgba(26,43,51,0.5)', textAlign: 'center', lineHeight: 22 },
   hint: { fontSize: 13, color: 'rgba(26,43,51,0.3)', textAlign: 'center' },
   linkBtn: { marginTop: 8, padding: 8 },

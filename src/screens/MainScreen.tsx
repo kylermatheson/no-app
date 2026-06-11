@@ -187,5 +187,5 @@ const styles = StyleSheet.create({
   todayCount: { fontSize: 72, color: COLORS.TEXT_ON_WHITE, fontWeight: '900', lineHeight: 80 },
   hint: { fontSize: 11, color: COLORS.TEXT_FAINT, marginTop: 8, letterSpacing: 1 },
   slipButton: { paddingVertical: 8, paddingHorizontal: 20 },
-  slipLabel: { fontSize: 13, color: COLORS.TEXT_FAINT, letterSpacing: 1 },
+  slipLabel: { fontSize: 13, color: COLORS.TEXT_DIM, letterSpacing: 1 },
 });
