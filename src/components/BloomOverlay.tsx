@@ -4,8 +4,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSequence,
-  withDelay,
   Easing,
 } from 'react-native-reanimated';
 import { ANIM_DURATIONS, COLORS } from '../constants/noLogAnimation';
@@ -39,19 +37,9 @@ export default function BloomOverlay({ phase, reducedMotion }: Props) {
         });
       }
     } else if (phase === 'DWELL' || phase === 'CELEBRATE') {
-      opacity.value = withSequence(
-        withDelay(
-          ANIM_DURATIONS.DWELL_PULSE_DELAY,
-          withTiming(0.92, {
-            duration: ANIM_DURATIONS.DWELL_PULSE_DURATION / 2,
-            easing: Easing.inOut(Easing.quad),
-          }),
-        ),
-        withTiming(1.0, {
-          duration: ANIM_DURATIONS.DWELL_PULSE_DURATION / 2,
-          easing: Easing.inOut(Easing.quad),
-        }),
-      );
+      // Hold steady at full cover — no pulse (it read as a flicker on desktop)
+      scale.value = 1;
+      opacity.value = 1;
     } else if (phase === 'RECEDE') {
       if (reducedMotion) {
         scale.value = 1;

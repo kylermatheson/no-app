@@ -12,3 +12,6 @@ web-build/
 web-build/
 .env
 .DS_Store
+
+# Local preview server config (machine-specific paths)
+.claude/launch.json
