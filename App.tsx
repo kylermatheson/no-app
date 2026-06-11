@@ -7,6 +7,7 @@ import MainScreen from './src/screens/MainScreen';
 import SlipConfirmationScreen from './src/screens/SlipConfirmationScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadState, getTodayRecord } from './src/store/storage';
 import { supabase } from './src/lib/supabase';
 import { pullAndMergeFromCloud } from './src/store/cloudStorage';
@@ -52,14 +53,18 @@ export default function App() {
   const [mainRefreshKey, setMainRefreshKey] = useState(0);
 
   useEffect(() => {
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check for existing session or skipped auth
+    Promise.all([
+      supabase.auth.getSession(),
+      AsyncStorage.getItem('no_app_skipped_auth'),
+    ]).then(([{ data: { session } }, skipped]) => {
       setSession(session);
       if (session) {
-        // Sync cloud data then show main
         pullAndMergeFromCloud(session.user.id)
-          .catch(() => {}) // offline — continue with local data
+          .catch(() => {})
           .finally(() => setView('main'));
+      } else if (skipped === 'true') {
+        setView('main');
       } else {
         setView('auth');
       }
@@ -111,7 +116,7 @@ export default function App() {
   }
 
   if (view === 'auth') {
-    return <AuthScreen onAuthSuccess={handleAuthSuccess} onSkip={() => setView('main')} />;
+    return <AuthScreen onAuthSuccess={handleAuthSuccess} onSkip={() => { AsyncStorage.setItem('no_app_skipped_auth', 'true'); setView('main'); }} />;
   }
 
   return (
@@ -130,6 +135,7 @@ export default function App() {
           onSignOut={async () => {
             setSettingsModal(false);
             await supabase.auth.signOut();
+            await AsyncStorage.removeItem('no_app_skipped_auth');
             setView('auth');
           }}
         />
