@@ -9,11 +9,14 @@ import Animated, {
 import { ANIM_DURATIONS, COLORS } from '../constants/noLogAnimation';
 import type { BloomPhase } from './BloomOverlay';
 
+const TEXT_ABOVE_BUTTON_CENTER = 80;
+
 type Props = {
   phase: BloomPhase;
+  buttonCenterY: number | null;
 };
 
-export default function BreathTextOverlay({ phase }: Props) {
+export default function BreathTextOverlay({ phase, buttonCenterY }: Props) {
   const inhaleOpacity = useSharedValue(0);
   const exhaleOpacity = useSharedValue(0);
 
@@ -50,16 +53,25 @@ export default function BreathTextOverlay({ phase }: Props) {
 
   if (phase === 'IDLE') return null;
 
+  const topPosition = buttonCenterY != null
+    ? buttonCenterY - TEXT_ABOVE_BUTTON_CENTER
+    : undefined;
+
+  const textStyle = [
+    styles.breathText,
+    topPosition != null ? { top: topPosition } : styles.fallbackTop,
+  ];
+
   return (
     <>
       <Animated.Text
-        style={[styles.breathText, { color: textColor }, inhaleStyle]}
+        style={[textStyle, { color: textColor }, inhaleStyle]}
         pointerEvents="none"
       >
         Inhale…
       </Animated.Text>
       <Animated.Text
-        style={[styles.breathText, { color: COLORS.BREATH_TEXT_ON_BLUE }, exhaleStyle]}
+        style={[textStyle, { color: COLORS.BREATH_TEXT_ON_BLUE }, exhaleStyle]}
         pointerEvents="none"
       >
         Exhale…
@@ -75,7 +87,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     letterSpacing: 2,
-    top: '28%',
     ...Platform.select({ web: { zIndex: 20, userSelect: 'none' } as any }),
+  },
+  fallbackTop: {
+    top: '28%',
   },
 });

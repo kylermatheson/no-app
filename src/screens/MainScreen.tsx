@@ -10,6 +10,7 @@ import {
   Platform,
   Animated as RNAnimated,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AppState as RNAppState } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -41,6 +42,8 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
 
   const todayCount = getTodayRecord(appState).noCount;
   const counterScale = useSharedValue(1);
+  const [buttonCenterY, setButtonCenterY] = useState<number | null>(null);
+  const buttonWrapperRef = useRef<View>(null);
 
   const reload = useCallback(async () => {
     const s = await loadState();
@@ -132,7 +135,7 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
             </View>
             {onSettingsPress && (
               <TouchableOpacity onPress={onSettingsPress} style={styles.accountBtn}>
-                <Text style={styles.accountText}>⚙︎</Text>
+                <Ionicons name="settings-outline" size={20} color={COLORS.TEXT_FAINT} />
               </TouchableOpacity>
             )}
           </View>
@@ -142,13 +145,22 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
             <Animated.Text style={[styles.todayCount, counterAnimStyle]}>
               {todayCount}
             </Animated.Text>
-            <NOButton
-              onHoldStart={handleHoldStart}
-              onHoldCancel={handleHoldCancel}
-              onConfirmed={handleConfirmed}
-              locked={locked}
-              holdProgress={holdProgress}
-            />
+            <View
+              ref={buttonWrapperRef}
+              onLayout={() => {
+                buttonWrapperRef.current?.measureInWindow((_x, y, _w, h) => {
+                  setButtonCenterY(y + h / 2);
+                });
+              }}
+            >
+              <NOButton
+                onHoldStart={handleHoldStart}
+                onHoldCancel={handleHoldCancel}
+                onConfirmed={handleConfirmed}
+                locked={locked}
+                holdProgress={holdProgress}
+              />
+            </View>
             <Text style={styles.hint}>hold 1.5 s to log</Text>
           </View>
 
@@ -167,7 +179,7 @@ export default function MainScreen({ onSlipPress, refreshKey, onNOLogged, sessio
       <BloomOverlay phase={phase} reducedMotion={reducedMotion} />
 
       {/* Breath text above bloom */}
-      <BreathTextOverlay phase={phase} />
+      <BreathTextOverlay phase={phase} buttonCenterY={buttonCenterY} />
     </View>
   );
 }
@@ -181,7 +193,6 @@ const styles = StyleSheet.create({
   lifetimeLabel: { fontSize: 11, letterSpacing: 3, color: COLORS.TEXT_FAINT, fontWeight: '600' },
   lifetimeCount: { fontSize: 28, color: COLORS.TEXT_DIM, fontWeight: '700' },
   accountBtn: { position: 'absolute', right: 24, top: 4, padding: 4 },
-  accountText: { fontSize: 18, color: COLORS.TEXT_FAINT },
   centerBlock: { alignItems: 'center', gap: 12 },
   todayLabel: { fontSize: 11, letterSpacing: 3, color: COLORS.TEXT_DIM, fontWeight: '600' },
   todayCount: { fontSize: 72, color: COLORS.TEXT_ON_WHITE, fontWeight: '900', lineHeight: 80 },
