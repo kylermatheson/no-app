@@ -47,7 +47,7 @@ export default function SlipConfirmationScreen({ nosBefore, onConfirm, onCancel,
           </View>
 
           <View style={styles.evidenceBlock}>
-            <Text style={styles.evidenceLabel}>Before this moment, today you said</Text>
+            <Text style={styles.evidenceLabel}>Before this moment, today you said NO</Text>
             <Text style={styles.evidenceCount}>{nosBefore}</Text>
             <Text style={styles.evidenceLabel}>{nosBefore === 1 ? 'time' : 'times'}</Text>
             <Text style={styles.evidenceSubtext}>That is yours. It cannot be taken.</Text>
