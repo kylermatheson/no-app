@@ -53,22 +53,32 @@ export default function App() {
   const [mainRefreshKey, setMainRefreshKey] = useState(0);
 
   useEffect(() => {
-    // Check for existing session or skipped auth
-    Promise.all([
-      supabase.auth.getSession(),
-      AsyncStorage.getItem('no_app_skipped_auth'),
-    ]).then(([{ data: { session } }, skipped]) => {
-      setSession(session);
-      if (session) {
-        pullAndMergeFromCloud(session.user.id)
-          .catch(() => {})
-          .finally(() => setView('main'));
-      } else if (skipped === 'true') {
-        setView('main');
-      } else {
-        setView('auth');
+    let isMounted = true;
+
+    async function initializeApp() {
+      try {
+        const [{ data: { session } }, skipped] = await Promise.all([
+          supabase.auth.getSession(),
+          AsyncStorage.getItem('no_app_skipped_auth'),
+        ]);
+
+        if (!isMounted) return;
+
+        setSession(session);
+        if (session) {
+          setView('main');
+          void pullAndMergeFromCloud(session.user.id).catch(() => {});
+        } else if (skipped === 'true') {
+          setView('main');
+        } else {
+          setView('auth');
+        }
+      } catch {
+        if (isMounted) setView('auth');
       }
-    });
+    }
+
+    void initializeApp();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -76,21 +86,25 @@ export default function App() {
     });
 
     if (Platform.OS !== 'web') {
-      Notifications.requestPermissionsAsync();
+      void Notifications.requestPermissionsAsync();
     }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function handleAuthSuccess() {
     const { data: { session } } = await supabase.auth.getSession();
     setSession(session);
     if (session) {
-      setView('loading');
-      await pullAndMergeFromCloud(session.user.id).catch(() => {});
+      setView('main');
+      void pullAndMergeFromCloud(session.user.id).catch(() => {});
       setMainRefreshKey((k) => k + 1);
+      return;
     }
-    setView('main');
+    setView('auth');
   }
 
   function handleSlipPress(todayNOs: number) {
